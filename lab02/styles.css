@@ -1,0 +1,20 @@
+body {
+    padding-left: 15px;
+    }
+
+    h1{
+    font-weight: bold;
+    text-decoration-line: underline;
+    }
+
+    h4{
+    font-weight: bold;
+    }
+
+    p{
+    padding-top: 25px;
+    }
+
+    .toIndent{
+        padding-left: 5px;
+    }

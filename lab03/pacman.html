@@ -1,0 +1,77 @@
+
+
+
+<script>
+
+    class Game {
+        constructor(size=10, score=0) {
+            this.size=size;
+            this.score=0;
+        }
+    }
+
+    const pieces = new Map([
+        ["pacman", "C"],
+        ["ghost", "^"],
+        ["fruit", "@"],
+        ["pellets", "."],
+        ["empty", " "]
+    ]);
+
+    const fruitValue=5;
+
+    function createGame(n){
+        const board=[];
+        for (let i = 0; i < n; i++) {
+            switch(i){
+                case Math.floor(n/2): board[i]=pieces["fruit"];
+                break;
+                case 3: board[i]=pieces["pacman"];
+                break;
+                case 6: board[i]=pieces["fruit"];
+                break;
+                default: board[i]=pieces["pellet"];
+            }
+        }
+        return board;
+    }
+
+    function isPacman(piece){
+        return piece==pieces["pacman"];
+    }
+
+    function pacmanPelletCollision(game){
+        game.score++;
+    }
+
+    function pacmanFruitCollision(game){
+        game.score=game.score+fruitValue;
+    }
+
+    function processMove(game, oldSquare, newSquare){
+        switch(game.board[newSquare]){
+            case pieces["pellet"]: pacmanPelletCollision(game);
+            break;
+            case pieces["fruit"]: pacmanFruitCollision(game);
+            break;
+            case pieces["ghost"]: pacmanGhostCollision(game);
+        }
+        board[oldSquare]=pieces["empty"];
+        board[newSquare]=pieces["pacman"];
+    }
+
+    function moveLeft(game){
+        const pacmanPosition=game.board.find(isPacman);
+        if(pacmanPosition<=0){return;}
+        processMove(game, pacmanPosition, pacmanPosition-1);
+        return game;
+    }
+
+    function moveRight(game){
+        const pacmanPosition=game.board.find(isPacman);
+        if(pacmanPosition=>game.board.length-1){return;}
+        processMove(game, pacmanPosition, pacmanPosition+1);
+        return game;
+    }
+
+</script>

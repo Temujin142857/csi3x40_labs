@@ -1,12 +1,12 @@
-
-
-
 <script>
 
     class Game {
-        constructor(size=10, score=0) {
+        constructor(size=10, score=0, level=0) {
             this.size=size;
-            this.score=0;
+            this.score=score;
+            this.level=level;
+            this.board=null;
+            this.isActive=true;
         }
     }
 
@@ -20,33 +20,53 @@
 
     const fruitValue=5;
 
-    function createGame(n){
-        const board=[];
+    function createGame(n, score=0, level=0){
+        if(n<5){n=5;}
+        n=n+level;
+        let game=new Game(n, score, level);
+        game.board=[];
         for (let i = 0; i < n; i++) {
             switch(i){
-                case Math.floor(n/2): board[i]=pieces["fruit"];
+                case Math.floor(n/2): game.board[i]=pieces["fruit"];
                 break;
-                case 3: board[i]=pieces["pacman"];
+                case 3: game.board[i]=pieces["pacman"];
                 break;
-                case 6: board[i]=pieces["fruit"];
+                case n-3: game.board[i]=pieces["ghost"];
                 break;
-                default: board[i]=pieces["pellet"];
+                default: game.board[i]=pieces["pellet"];
             }
         }
-        return board;
+        return game;
     }
 
     function isPacman(piece){
         return piece==pieces["pacman"];
     }
 
+    function isGhost(piece){
+        return piece==pieces["ghost"];
+    }
+
+
     function pacmanPelletCollision(game){
         game.score++;
+        game.pelletsRemaining--;
+        if(game.pelletsRemaing=0){
+            game.isActive=false;
+            game.level++;
+            const newGame=new game(game.size, game.score, game.level);
+        }
+        return newGame;
     }
 
     function pacmanFruitCollision(game){
         game.score=game.score+fruitValue;
     }
+
+    function pacmanGhostCollision(game){
+        game.isActive=false;
+    }
+
 
     function processMove(game, oldSquare, newSquare){
         switch(game.board[newSquare]){
@@ -62,16 +82,33 @@
 
     function moveLeft(game){
         const pacmanPosition=game.board.find(isPacman);
-        if(pacmanPosition<=0){return;}
-        processMove(game, pacmanPosition, pacmanPosition-1);
+        let newPosition=pacmanPosition-1
+        if(newPosition<0){newPositon=game.board.length+newPosition;}
+        processMove(game, pacmanPosition, newPosition);
         return game;
     }
 
     function moveRight(game){
         const pacmanPosition=game.board.find(isPacman);
-        if(pacmanPosition=>game.board.length-1){return;}
-        processMove(game, pacmanPosition, pacmanPosition+1);
+        processMove(game, pacmanPosition, (pacmanPosition+1)%game.board.length);
         return game;
     }
+
+    //use mod to handle circular movement
+
+    function moveGhost(game){
+        if(!game.isActive){return;}
+        //gives either -1 or 1
+        const direction=1-Math.floor(Math.floor(Math.random() * 10)/4);
+        const ghostPosition=game.board.find(isGhost);
+        if(game.board[ghostPosition+direction]==pieces["pacman"]){
+            pacmanGhostCollision(game);
+        }
+        game.board[ghostPosition] = game.board[ghostPosition].replace(pieces["ghost"], "");
+        game.board[(ghostPosition+direction)%game.board.length]=game.board[(ghostPosition+direction)%game.board.length].concat(pieces["ghost"]);
+
+
+    }
+
 
 </script>

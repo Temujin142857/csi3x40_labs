@@ -1,4 +1,52 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pacman Game</title>
+    <style>
+        .board {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            width: fit-content;
+            margin: 20px auto;
+            border: 2px solid #000;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .cell {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .score {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="game-container">
+    <div class="board" id="game-board"></div>
+    <div class="score" id="game-score">Score: 0</div>
+</div>
+
+
+
 <script>
+
+
 
     class Game {
         constructor(size=10, score=0, level=0) {
@@ -7,56 +55,79 @@
             this.level=level;
             this.board=null;
             this.isActive=true;
+            this.pelletsRemaining=size-3;
         }
     }
 
-    const pieces = new Map([
+    const PIECES = new Map([
         ["pacman", "C"],
         ["ghost", "^"],
         ["fruit", "@"],
-        ["pellets", "."],
+        ["pellet", "."],
         ["empty", " "]
     ]);
 
     const fruitValue=5;
+    let game;
 
     function createGame(n, score=0, level=0){
         if(n<5){n=5;}
         n=n+level;
-        let game=new Game(n, score, level);
+        game=new Game(n, score, level);
         game.board=[];
         for (let i = 0; i < n; i++) {
             switch(i){
-                case Math.floor(n/2): game.board[i]=pieces["fruit"];
+                case Math.floor(n/2): game.board[i]=PIECES.get("fruit");
                 break;
-                case 3: game.board[i]=pieces["pacman"];
+                case 3: game.board[i]=PIECES.get("pacman");
                 break;
-                case n-3: game.board[i]=pieces["ghost"];
+                case n-3: game.board[i]=PIECES.get("ghost");
                 break;
-                default: game.board[i]=pieces["pellet"];
+                default: game.board[i]=PIECES.get("pellet");
             }
         }
         return game;
     }
 
+
+    let moving="";
+
+    function handleKeyDown(event){
+        if(event.key==="ArrowLeft"){moving="left";}
+        else if(event.key==="ArrowRight"){moving="right";}
+    }
+
+    function handleKeyUp(event){
+        if(event.key==="ArrowLeft"){moving="";}
+        else if(event.key==="ArrowRight"){moving="";}
+    }
+
+
+
+    function playerMove(){
+       if(!game.isActive){return;}
+       else if(moving==="left"){moveLeft(game);}
+       else if(moving==="right"){moveRight(game);}
+    }
+
     function isPacman(piece){
-        return piece==pieces["pacman"];
+        return piece===PIECES.get("pacman");
     }
 
     function isGhost(piece){
-        return piece==pieces["ghost"];
+        return piece.includes(PIECES.get("ghost"));
     }
 
 
     function pacmanPelletCollision(game){
         game.score++;
         game.pelletsRemaining--;
-        if(game.pelletsRemaing=0){
+        if(game.pelletsRemaining===0){
             game.isActive=false;
             game.level++;
-            const newGame=new game(game.size, game.score, game.level);
+            return createGame(game.size, game.score, game.level+1);
         }
-        return newGame;
+        return game;
     }
 
     function pacmanFruitCollision(game){
@@ -70,45 +141,69 @@
 
     function processMove(game, oldSquare, newSquare){
         switch(game.board[newSquare]){
-            case pieces["pellet"]: pacmanPelletCollision(game);
+            case PIECES.get("pellet"): pacmanPelletCollision(game);
             break;
-            case pieces["fruit"]: pacmanFruitCollision(game);
+            case PIECES.get("fruit"): pacmanFruitCollision(game);
             break;
-            case pieces["ghost"]: pacmanGhostCollision(game);
+            case PIECES.get("ghost"): pacmanGhostCollision(game);
         }
-        board[oldSquare]=pieces["empty"];
-        board[newSquare]=pieces["pacman"];
+        game.board[oldSquare]=PIECES.get("empty");
+        game.board[newSquare]=PIECES.get("pacman");
     }
 
     function moveLeft(game){
-        const pacmanPosition=game.board.find(isPacman);
+        const pacmanPosition=game.board.findIndex(isPacman);
         let newPosition=pacmanPosition-1
-        if(newPosition<0){newPositon=game.board.length+newPosition;}
+        if(newPosition<0){newPosition=game.board.length+newPosition;}
         processMove(game, pacmanPosition, newPosition);
         return game;
     }
 
     function moveRight(game){
-        const pacmanPosition=game.board.find(isPacman);
+        const pacmanPosition=game.board.findIndex(isPacman);
         processMove(game, pacmanPosition, (pacmanPosition+1)%game.board.length);
         return game;
     }
 
     //use mod to handle circular movement
 
-    function moveGhost(game){
+    function moveGhost(){
         if(!game.isActive){return;}
         //gives either -1 or 1
-        const direction=1-Math.floor(Math.floor(Math.random() * 10)/4);
-        const ghostPosition=game.board.find(isGhost);
-        if(game.board[ghostPosition+direction]==pieces["pacman"]){
+        const direction=1-Math.floor(Math.floor(Math.random() * 10)/5)*2;
+        const ghostPosition=game.board.findIndex(isGhost);
+        console.log(ghostPosition,"length", game.board.length, "diretion", direction)
+        if(game.board[ghostPosition+direction]===PIECES.get("pacman")){
             pacmanGhostCollision(game);
         }
-        game.board[ghostPosition] = game.board[ghostPosition].replace(pieces["ghost"], "");
-        game.board[(ghostPosition+direction)%game.board.length]=game.board[(ghostPosition+direction)%game.board.length].concat(pieces["ghost"]);
-
-
+        game.board[ghostPosition] = game.board[ghostPosition].replace(PIECES.get("ghost"), "");
+        console.log(Math.round(ghostPosition+direction)%game.board.length)
+        let newPosition=Math.round(ghostPosition+direction)%game.board.length;
+        if(newPosition<=-1){newPosition=game.board.length+newPosition}
+        game.board[newPosition]=game.board[newPosition].concat(PIECES.get("ghost"));
     }
 
+    function updateBoard() {
+        const gameBoard = document.getElementById("game-board");
+        gameBoard.innerHTML = "";
+        game.board.forEach(piece => {
+            const cell = document.createElement("div");
+            cell.className = "cell";
+            cell.textContent = piece;
+            gameBoard.appendChild(cell);
+        });
+        const scoreElement = document.getElementById("game-score");
+        scoreElement.textContent = `Score: ${game.score}`;
+    }
+
+    createGame(10);
+    updateBoard();
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    setInterval(playerMove, 500);
+    setInterval(moveGhost, 400);
+    setInterval(updateBoard,100)
 
 </script>
+</body>
+</html>

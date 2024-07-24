@@ -4,7 +4,9 @@ var Scene = (function() {
             grass: "#2ecc71",
             sky: "#3498db",
             trunk: "#A17917",
-            leaves: "#27ae60"
+            leaves: "#27ae60",
+            healthBarBackground: "#e74c3c",
+            healthBarFill: "#2ecc71"
         },
         player: 10,
         playerDirection: null,
@@ -13,7 +15,9 @@ var Scene = (function() {
         position: -1,
         trees: [100, 500, 800, 1000, 1200],
         playerWidth: 15,
-        treeWidth: 12
+        treeWidth: 12,
+        health: 100, // Player health
+        maxHealth: 100 // Maximum health
     };
 
     function fullScreenProperties() {
@@ -51,6 +55,22 @@ var Scene = (function() {
         context.fill();
     }
 
+    function drawHealthBar() {
+        var x = 10;
+        var y = 10;
+        var width = 100;
+        var height = 10;
+
+        // Draw the background of the health bar
+        entity.context.fillStyle = entity.styles.healthBarBackground;
+        entity.context.fillRect(x, y, width, height);
+
+        // Draw the filled part of the health bar
+        var healthWidth = (entity.health / entity.maxHealth) * width;
+        entity.context.fillStyle = entity.styles.healthBarFill;
+        entity.context.fillRect(x, y, healthWidth, height);
+    }
+
     function drawPlayer() {
         var y = entity.y * 0.9;
         var jumpOffset = 0;
@@ -70,6 +90,18 @@ var Scene = (function() {
         }
         entity.context.fillStyle = "#f1c40f";
         entity.context.fillRect(entity.player, y - 25 - jumpOffset, entity.playerWidth, 25 + jumpOffset);
+
+        // Draw the health bar
+        drawHealthBar();
+    }
+
+    function blowUp() {
+        drawPlayer();
+        entity.health -= 10; // Example of decreasing health
+        if (entity.health <= 0) {
+            // Handle player death or game over
+            console.log("Game Over!");
+        }
     }
 
     function checkCollisions() {
@@ -86,10 +118,7 @@ var Scene = (function() {
         }
     }
 
-    function blowUp() {
-        drawPlayer();
-        // Handle explosion or collision logic here
-    }
+
 
     function tick() {
         drawSky();
